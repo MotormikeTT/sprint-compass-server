@@ -19,6 +19,7 @@ type Result {
 }
 
 type Project {
+    _id: ID
     name: String
     team: String
     startdate: String
