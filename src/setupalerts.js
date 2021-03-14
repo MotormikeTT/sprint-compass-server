@@ -1,50 +1,62 @@
+const utl = require("./utilities");
 const dbRtns = require("./dbroutines");
-const utilities = require("./utilities");
-const { gocalerts, countriesraw, collection } = require("./config");
+const { gocalertspath, isocountriespath, collection } = require("./config");
 
-setupAlerts = async () => {
-  let isoData = [];
-  let alertJson = "";
-  let totalResults = "";
-  try {
-    db = await dbRtns.getDBInstance();
-    let results = await dbRtns.deleteAll(db, collection);
-    totalResults += `Deleted ${results.deletedCount} existing documents from the alerts collection. `;
-    isoData = await utilities.getJSONFromWWWPromise(countriesraw);
-    totalResults += `Retrieved Alert JSON from remote web site. `;
-    alertJson = await utilities.getJSONFromWWWPromise(gocalerts);
-    totalResults += `Retrieved Country JSON from remote web site. `;
+const setup = async () => {
+	let results = "";
+	try {
+		// get db
+		db = await dbRtns.getDBInstance();
+		// delete existing alerts
+		let deletionResults = await dbRtns.deleteAll(db, collection);
 
-    let resultArray = await Promise.allSettled(
-      isoData.map((country) => {
-        if (alertJson.data[country["alpha-2"]])
-          return dbRtns.addOne(db, collection, {
-            country: country["alpha-2"],
-            name: country.name,
-            text: alertJson.data[country["alpha-2"]]["eng"]["advisory-text"],
-            date: alertJson.data[country["alpha-2"]]["date-published"]["date"],
-            region: country.region,
-            subregion: country["sub-region"],
-          });
-        else
-          return dbRtns.addOne(db, collection, {
-            country: country["alpha-2"],
-            name: country.name,
-            text: "No travel alerts",
-            date: "",
-            region: country.region,
-            subregion: country["sub-region"],
-          });
-      })
-    );
-    totalResults += `Added approximately ${resultArray.length} new documents to the alerts collection.`;
-  } catch (err) {
-    console.log(`Error ==> ${err}`);
-    process.exit(1, err);
-  } finally {
-    return { results: totalResults };
-  }
+		results += `Deleted ${deletionResults.deletedCount} existing documents from ${collection} collection. `;
+
+		// Obtain the ALERT JSON from the GOC site
+		let alertJson = await utl.getJSONFromWWWPromise(gocalertspath);
+		results += `Retrieved Alert JSON from remote web site. `;
+
+		// Obtain the country ISO JSON
+		let countries = await utl.getJSONFromWWWPromise(isocountriespath);
+		results += `Retrieved Country JSON from remote web site. `;
+
+		// add each new object to a collection
+		await Promise.allSettled(
+			countries.map((country) => {
+				let alertData;
+				if (alertJson.data[country["alpha-2"]]) {
+					alertData = {
+						country: country["alpha-2"],
+						name: country.name,
+						text: alertJson.data[country["alpha-2"]].eng["advisory-text"],
+						date: alertJson.data[country["alpha-2"]]["date-published"].date,
+						region: country.region,
+						subregion: country["sub-region"],
+					};
+				} else {
+					alertData = {
+						country: country["alpha-2"],
+						name: country.name,
+						text: "No travel alerts",
+						date: "",
+						region: country.region,
+						subregion: country["sub-region"],
+					};
+				}
+				return dbRtns.addOne(db, collection, alertData);
+			})
+		);
+
+		// log the total number of documents in the alerts collection
+		let allDbAlerts = await dbRtns.findAll(db, collection, {}, {});
+		results += `Added approximatley ${allDbAlerts.length} new documents to the alerts collection`;
+	} catch (err) {
+		console.log(err);
+	} finally {
+		return { results: results };
+	}
 };
+
 module.exports = {
-  setupAlerts,
+	setup,
 };
