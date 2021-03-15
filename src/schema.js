@@ -2,6 +2,7 @@ const { buildSchema } = require("graphql");
 const schema = buildSchema(`
 type Query {
     projects: [Project],
+    tasks: [Task],
 }
 
 type Mutation {
@@ -12,6 +13,20 @@ type Mutation {
         totalstorypoints: Int,
         totalcost: Float,
         hourlyrate: Float) : Project,
+
+        
+    addtask(name: String,
+        description: String,
+        costestimate: Float,
+        relativeestimate: Float,
+        projectname: String) : Task,
+
+    edittask(id: ID
+        name: String,
+        description: String,
+        costestimate: Float,
+        relativeestimate: Float,
+        projectname: String) : Task,
 }
 
 type Result {
@@ -27,6 +42,15 @@ type Project {
     totalstorypoints: Int
     totalcost: Float
     hourlyrate: Float
+}
+
+type Task {
+    _id: ID
+    name: String
+    description: String
+    costestimate: Float
+    relativeestimate: Float
+    projectname: String
 }
 `);
 
