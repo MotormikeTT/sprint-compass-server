@@ -1,6 +1,10 @@
 const dbRtns = require("./dbroutines");
 var ObjectId = require("mongodb").ObjectId;
-const { projectcollection, teamcollection } = require("./config");
+const {
+  projectcollection,
+  teamcollection,
+  taskcollection,
+} = require("./config");
 
 const resolvers = {
   projects: async () => {
@@ -49,6 +53,45 @@ const resolvers = {
     return await dbRtns.findOne(db, projectcollection, {
       _id: new ObjectId(args._id),
     });
+  },
+
+  tasks: async () => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findAll(db, taskcollection, {}, {});
+  },
+
+  addtask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let task = {
+      name: args.name,
+      description: args.description,
+      costestimate: args.costestimate,
+      relativeestimate: args.relativeestimate,
+      projectname: args.projectname,
+    };
+    let results = await dbRtns.addOne(db, taskcollection, task);
+    return results.insertedCount === 1 ? task : null;
+  },
+
+  edittask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+
+    let task = {
+      name: args.name,
+      description: args.description,
+      costestimate: args.costestimate,
+      relativeestimate: args.relativeestimate,
+      projectname: args.projectname,
+    };
+
+    let results = await dbRtns.updateOne(
+      db,
+      taskcollection,
+      { _id: args.id },
+      { task }
+    );
+
+    return results.insertedCount === 1 ? task : null;
   },
 };
 module.exports = { resolvers };
