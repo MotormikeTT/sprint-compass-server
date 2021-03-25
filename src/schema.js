@@ -24,6 +24,8 @@ type Mutation {
         totalstorypoints: Int,
         totalcost: Float,
         hourlyrate: Float) : Project,
+    
+    removeproject(_id: ID) : String,
         
     addtask(name: String,
         description: String,

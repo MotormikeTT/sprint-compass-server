@@ -51,6 +51,17 @@ const resolvers = {
       : `user was not updated`;
   },
 
+  removeproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, projectcollection, {
+      _id: new ObjectId(id),
+    });
+    return results.deletedCount == 1
+      ? "user was deleted"
+      : "user was not deleted";
+  },
+
   tasks: async () => {
     let db = await dbRtns.getDBInstance();
     return await dbRtns.findAll(db, taskcollection, {}, {});
