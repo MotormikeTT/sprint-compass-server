@@ -4,6 +4,7 @@ module.exports = {
 	projectcollection: process.env.PROJECTCOLL,
 	teamcollection: process.env.TEAMCOLL,
 	taskcollection: process.env.TASKCOLL,
+	subtaskcollection: process.env.SUBTASKCOLL,
 	atlas: process.env.DBURL,
 	appdb: process.env.DB,
 	port: process.env.PORT,

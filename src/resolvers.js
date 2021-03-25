@@ -4,6 +4,7 @@ const {
 	projectcollection,
 	teamcollection,
 	taskcollection,
+	subtaskcollection,
 } = require("./config");
 
 const resolvers = {
@@ -11,6 +12,7 @@ const resolvers = {
 		let db = await dbRtns.getDBInstance();
 		return await dbRtns.findAll(db, projectcollection, {}, {});
 	},
+
 	addproject: async (args) => {
 		let db = await dbRtns.getDBInstance();
 		let project = {
@@ -25,6 +27,7 @@ const resolvers = {
 		let results = await dbRtns.addOne(db, projectcollection, project);
 		return results.insertedCount === 1 ? project : null;
 	},
+
 	updateproject: async (args) => {
 		let db = await dbRtns.getDBInstance();
 		let id = args._id;
@@ -48,16 +51,23 @@ const resolvers = {
 			: `user was not updated`;
 	},
 
+	tasks: async () => {
+		let db = await dbRtns.getDBInstance();
+		return await dbRtns.findAll(db, taskcollection, {}, {});
+	},
+
+	subtasksbytaskid: async (args) => {
+		let db = await dbRtns.getDBInstance();
+		return await dbRtns.findAll(db, subtaskcollection, {
+			taskid: new ObjectId(args.taskid),
+		});
+	},
+
 	projectbyid: async (args) => {
 		let db = await dbRtns.getDBInstance();
 		return await dbRtns.findOne(db, projectcollection, {
 			_id: new ObjectId(args._id),
 		});
-	},
-
-	tasks: async () => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findAll(db, taskcollection, {}, {});
 	},
 
 	addtask: async (args) => {
@@ -73,7 +83,7 @@ const resolvers = {
 		return results.insertedCount === 1 ? task : null;
 	},
 
-	edittask: async (args) => {
+	updatetask: async (args) => {
 		let db = await dbRtns.getDBInstance();
 
 		let task = {
@@ -93,6 +103,19 @@ const resolvers = {
 		return results.lastErrorObject.updatedExisting
 			? `task was updated`
 			: `task was not updated`;
+	},
+
+	addsubtask: async (args) => {
+		let db = await dbRtns.getDBInstance();
+		let subtask = {
+			name: args.name,
+			description: args.description,
+			hoursworked: args.hoursworked,
+			relativeestimate: args.relativeestimate,
+			taskid: new ObjectId(args.taskid),
+		};
+		let results = await dbRtns.addOne(db, subtaskcollection, subtask);
+		return results.insertedCount === 1 ? subtask : null;
 	},
 };
 module.exports = { resolvers };

@@ -4,6 +4,7 @@ type Query {
     projects: [Project],
     projectbyid(_id: ID) : Project
     tasks: [Task],
+    subtasksbytaskid(taskid: ID): [Subtask],
 }
 
 type Mutation {
@@ -36,10 +37,12 @@ type Mutation {
         costestimate: Float,
         relativeestimate: Float,
         projectname: String) : Task,
-}
 
-type Result {
-    results: String
+    addsubtask(name: String,
+        description: String,
+        hoursworked: Float,
+        relativeestimate: Float,
+        taskid: ID) : Subtask,
 }
 
 type Project {
@@ -60,6 +63,15 @@ type Task {
     costestimate: Float
     relativeestimate: Float
     projectname: String
+}
+
+type Subtask {
+    _id: ID
+    name: String
+    description: String
+    hoursworked: Float
+    relativeestimate: Float
+    taskid: ID
 }
 `);
 
