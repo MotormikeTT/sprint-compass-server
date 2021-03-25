@@ -43,6 +43,13 @@ type Mutation {
         hoursworked: Float,
         relativeestimate: Float,
         taskid: ID) : Subtask,
+
+    updatesubtask(_id: ID
+        name: String,
+        description: String,
+        hoursworked: Float,
+        relativeestimate: Float,
+        taskid: ID) : Subtask,
 }
 
 type Project {
