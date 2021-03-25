@@ -39,6 +39,8 @@ type Mutation {
         costestimate: Float,
         relativeestimate: Float,
         projectname: String) : Task,
+    
+    removetask(_id: ID) : String,
 
     addsubtask(name: String,
         description: String,
@@ -52,6 +54,8 @@ type Mutation {
         hoursworked: Float,
         relativeestimate: Float,
         taskid: ID) : Subtask,
+
+    removesubtask(_id: ID) : String,
 }
 
 type Project {

@@ -54,12 +54,26 @@ const resolvers = {
   removeproject: async (args) => {
     let db = await dbRtns.getDBInstance();
     let id = args._id;
-    let results = await dbRtns.deleteOne(db, projectcollection, {
+    let results = await dbRtns.findOneAndDelete(db, projectcollection, {
       _id: new ObjectId(id),
     });
-    return results.deletedCount == 1
-      ? "user was deleted"
-      : "user was not deleted";
+    let tasks = await dbRtns.findAll(
+      db,
+      taskcollection,
+      { projectname: results.value.name },
+      {}
+    );
+    await dbRtns.deleteMany(db, taskcollection, {
+      projectname: results.value.name,
+    });
+    tasks.forEach(async (element) => {
+      await dbRtns.deleteMany(db, subtaskcollection, {
+        taskid: element._id,
+      });
+    });
+    return results.ok == 1
+      ? "project and all related tasks/subtasks were deleted"
+      : "project was not deleted";
   },
 
   tasks: async () => {
@@ -116,6 +130,20 @@ const resolvers = {
       : `task was not updated`;
   },
 
+  removetask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, taskcollection, {
+      _id: new ObjectId(id),
+    });
+    await dbRtns.deleteMany(db, subtaskcollection, {
+      taskid: id,
+    });
+    return results.deletedCount == 1
+      ? "task and all related subtasks were deleted"
+      : "task was not deleted";
+  },
+
   addsubtask: async (args) => {
     let db = await dbRtns.getDBInstance();
     let subtask = {
@@ -148,6 +176,17 @@ const resolvers = {
     return results.lastErrorObject.updatedExisting
       ? `subtask was updated`
       : `subtask was not updated`;
+  },
+
+  removesubtask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, subtaskcollection, {
+      _id: new ObjectId(id),
+    });
+    return results.deletedCount == 1
+      ? "subtask was deleted"
+      : "subtask was not deleted";
   },
 };
 module.exports = { resolvers };
