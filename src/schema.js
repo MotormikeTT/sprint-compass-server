@@ -23,7 +23,7 @@ type Mutation {
         storypointconversion: Int,
         totalstorypoints: Int,
         totalcost: Float,
-        hourlyrate: Float) : Project,
+        hourlyrate: Float) : String,
     
     removeproject(_id: ID) : String,
         

@@ -43,7 +43,7 @@ const resolvers = {
     let results = await dbRtns.updateOne(
       db,
       projectcollection,
-      { _id: new ObjectId(id) },
+      { _id: ObjectId(id) },
       project
     );
     return results.lastErrorObject.updatedExisting
