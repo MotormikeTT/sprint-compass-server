@@ -122,7 +122,7 @@ const resolvers = {
     let results = await dbRtns.updateOne(
       db,
       taskcollection,
-      { _id: new ObjectId(args.id) },
+      { _id: new ObjectId(args._id) },
       task
     );
     return results.lastErrorObject.updatedExisting
