@@ -188,5 +188,51 @@ const resolvers = {
       ? "subtask was deleted"
       : "subtask was not deleted";
   },
+
+  teambyprojectid: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findAll(db, teamcollection, {
+      projectid: new ObjectId(args.projectid),
+    });
+  },
+
+  addteam: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    const member = {
+      name: args.name,
+      projectid: new ObjectId(args.projectid),
+    };
+    let results = await dbRtns.addOne(db, teamcollection, member);
+    return results.insertedCount === 1 ? member : null;
+  },
+
+  updateteam: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    const member = {
+      name: args.name,
+      projectid: ObjectId(args.projectid),
+    };
+
+    let results = await dbRtns.updateOne(
+      db,
+      teamcollection,
+      { _id: new ObjectId(args._id) },
+      member
+    );
+    return results.lastErrorObject.updatedExisting
+      ? `team member was updated`
+      : `team member was not updated`;
+  },
+
+  removeteam: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, teamcollection, {
+      _id: new ObjectId(id),
+    });
+    return results.deletedCount == 1
+      ? "team member was deleted"
+      : "team member was not deleted";
+  },
 };
 module.exports = { resolvers };
