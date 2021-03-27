@@ -6,6 +6,8 @@ type Query {
     tasks: [Task],
     subtasksbytaskid(taskid: ID): [Subtask],
     teambyprojectid(projectid: ID): [Team],
+    sprints: [String],
+    tasksinsprint(num: Int) : [Task]
 }
 
 type Mutation {
@@ -66,6 +68,8 @@ type Mutation {
         projectid: ID) : Team,
 
     removeteam(_id: ID) : String,
+
+    addsprint(num: Int) : Sprint,
 }
 
 type Project {
@@ -101,6 +105,12 @@ type Team {
     _id: ID
     name: String
     projectid: ID
+}
+
+type Sprint {
+    _id: ID
+    num: Int
+    taskid: ID
 }
 `);
 
