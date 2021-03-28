@@ -70,6 +70,8 @@ type Mutation {
     removeteam(_id: ID) : String,
 
     addsprint(num: Int) : Sprint,
+
+    movetasktosprint(num: Int, taskid: ID) : Sprint,
 }
 
 type Project {

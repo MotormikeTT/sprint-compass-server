@@ -52,13 +52,14 @@ const resolvers = {
 		});
 		let tasks = [];
 		sprints.map(async (entry) => {
-			if (!entry.taskid) {
+			if (entry.taskid) {
 				let results = await dbRtns.findAll(db, taskcollection, {
-					taskid: new ObjectId(entry.taskid),
+					_id: new ObjectId(entry.taskid),
 				});
 				tasks.push(...results);
 			}
 		});
+
 		return tasks;
 	},
 
@@ -261,6 +262,18 @@ const resolvers = {
 	addsprint: async (args) => {
 		let db = await dbRtns.getDBInstance();
 		let sprint = { num: args.num };
+		let results = await dbRtns.addOne(db, sprintcollection, sprint);
+		return results.insertedCount === 1 ? sprint : null;
+	},
+
+	movetasktosprint: async (args) => {
+		let db = await dbRtns.getDBInstance();
+		// delete first
+		await dbRtns.deleteOne(db, sprintcollection, {
+			taskid: ObjectId(args.taskid),
+		});
+		// then add a new entry
+		let sprint = { num: args.num, taskid: ObjectId(args.taskid) };
 		let results = await dbRtns.addOne(db, sprintcollection, sprint);
 		return results.insertedCount === 1 ? sprint : null;
 	},
