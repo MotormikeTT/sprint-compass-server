@@ -3,11 +3,11 @@ const schema = buildSchema(`
 type Query {
     projects: [Project],
     projectbyid(_id: ID) : Project
-    tasks: [Task],
+    tasksforproject(projectname: String): [Task],
     subtasksbytaskid(taskid: ID): [Subtask],
     teambyprojectid(projectid: ID): [Team],
-    sprints: [String],
-    tasksinsprint(num: Int) : [Task]
+    sprintsinproject(projectname: String): [String],
+    tasksinsprintforproject(num: Int, projectname: String) : [Task]
 }
 
 type Mutation {
@@ -69,9 +69,9 @@ type Mutation {
 
     removeteam(_id: ID) : String,
 
-    addsprint(num: Int) : Sprint,
+    addsprint(num: Int, projectname: String) : Sprint,
 
-    movetasktosprint(num: Int, taskid: ID) : Sprint,
+    copytasktosprint(num: Int, taskid: ID, projectname: String) : Sprint,
 }
 
 type Project {
@@ -113,6 +113,7 @@ type Sprint {
     _id: ID
     num: Int
     taskid: ID
+    projectname: String
 }
 `);
 

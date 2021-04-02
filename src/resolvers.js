@@ -21,9 +21,14 @@ const resolvers = {
 		});
 	},
 
-	tasks: async () => {
+	tasksforproject: async (args) => {
 		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findAll(db, taskcollection, {}, {});
+		return await dbRtns.findAll(
+			db,
+			taskcollection,
+			{ projectname: args.projectname },
+			{}
+		);
 	},
 
 	subtasksbytaskid: async (args) => {
@@ -40,24 +45,33 @@ const resolvers = {
 		});
 	},
 
-	sprints: async () => {
+	sprintsinproject: async (args) => {
 		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findUniqueValues(db, sprintcollection, "num");
+		return await dbRtns.findUniqueValues(db, sprintcollection, "num", {
+			projectname: args.projectname,
+		});
 	},
 
-	tasksinsprint: async (args) => {
+	tasksinsprintforproject: async (args) => {
 		let db = await dbRtns.getDBInstance();
 		let sprints = await dbRtns.findAll(db, sprintcollection, {
 			num: args.num,
+			projectname: args.projectname,
 		});
 		let tasks = [];
-		sprints.map(async (entry) => {
-			if (entry.taskid) {
-				let results = await dbRtns.findAll(db, taskcollection, {
-					_id: new ObjectId(entry.taskid),
-				});
-				tasks.push(...results);
-			}
+		let resultsArray = await Promise.allSettled(
+			sprints.map(async (entry) => {
+				if (entry.taskid !== undefined) {
+					return await dbRtns.findAll(db, taskcollection, {
+						_id: new ObjectId(entry.taskid),
+					});
+				}
+			})
+		);
+		resultsArray.map((result) => {
+			result.value // resolve
+				? tasks.push(...result.value)
+				: null;
 		});
 
 		return tasks;
@@ -120,6 +134,10 @@ const resolvers = {
 			await dbRtns.deleteMany(db, subtaskcollection, {
 				taskid: element._id,
 			});
+		});
+		// delete sprints
+		await dbRtns.deleteMany(db, sprintcollection, {
+			projectname: results.value.name,
 		});
 		return results.ok == 1
 			? "project and all related tasks/subtasks were deleted"
@@ -261,19 +279,19 @@ const resolvers = {
 
 	addsprint: async (args) => {
 		let db = await dbRtns.getDBInstance();
-		let sprint = { num: args.num };
+		let sprint = { num: args.num, projectname: args.projectname };
 		let results = await dbRtns.addOne(db, sprintcollection, sprint);
 		return results.insertedCount === 1 ? sprint : null;
 	},
 
-	movetasktosprint: async (args) => {
+	copytasktosprint: async (args) => {
 		let db = await dbRtns.getDBInstance();
-		// delete first
-		await dbRtns.deleteOne(db, sprintcollection, {
+		// add a new entry
+		let sprint = {
+			num: args.num,
 			taskid: ObjectId(args.taskid),
-		});
-		// then add a new entry
-		let sprint = { num: args.num, taskid: ObjectId(args.taskid) };
+			projectname: args.projectname,
+		};
 		let results = await dbRtns.addOne(db, sprintcollection, sprint);
 		return results.insertedCount === 1 ? sprint : null;
 	},
