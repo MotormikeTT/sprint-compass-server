@@ -72,6 +72,8 @@ type Mutation {
     addsprint(num: Int, projectname: String) : Sprint,
 
     copytasktosprint(num: Int, taskid: ID, projectname: String) : Sprint,
+
+    removetaskfromsprint(num: Int, taskid: ID, projectname: String) : String,
 }
 
 type Project {
