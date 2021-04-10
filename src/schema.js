@@ -2,7 +2,8 @@ const { buildSchema } = require("graphql");
 const schema = buildSchema(`
 type Query {
     projects: [Project],
-    projectbyid(_id: ID) : Project
+    projectbyid(_id: ID) : Project,
+    projectbydata(name: String, team: String, startdate: String) : Project,
     tasksforproject(projectname: String): [Task],
     subtasksbytaskid(taskid: ID): [Subtask],
     teambyprojectid(projectid: ID): [Team],

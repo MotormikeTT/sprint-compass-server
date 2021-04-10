@@ -1,299 +1,308 @@
 const dbRtns = require("./dbroutines");
 var ObjectId = require("mongodb").ObjectId;
 const {
-	projectcollection,
-	teamcollection,
-	taskcollection,
-	subtaskcollection,
-	sprintcollection,
+  projectcollection,
+  teamcollection,
+  taskcollection,
+  subtaskcollection,
+  sprintcollection,
 } = require("./config");
 
 const resolvers = {
-	projects: async () => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findAll(db, projectcollection, {}, {});
-	},
+  projects: async () => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findAll(db, projectcollection, {}, {});
+  },
 
-	projectbyid: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findOne(db, projectcollection, {
-			_id: new ObjectId(args._id),
-		});
-	},
+  projectbyid: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findOne(db, projectcollection, {
+      _id: new ObjectId(args._id),
+    });
+  },
 
-	tasksforproject: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findAll(
-			db,
-			taskcollection,
-			{ projectname: args.projectname },
-			{}
-		);
-	},
+  projectbydata: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findOne(db, projectcollection, {
+      name: args.name,
+      team: args.team,
+      startdate: args.startdate,
+    });
+  },
 
-	subtasksbytaskid: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findAll(db, subtaskcollection, {
-			taskid: new ObjectId(args.taskid),
-		});
-	},
+  tasksforproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findAll(
+      db,
+      taskcollection,
+      { projectname: args.projectname },
+      {}
+    );
+  },
 
-	teambyprojectid: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findAll(db, teamcollection, {
-			projectid: new ObjectId(args.projectid),
-		});
-	},
+  subtasksbytaskid: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findAll(db, subtaskcollection, {
+      taskid: new ObjectId(args.taskid),
+    });
+  },
 
-	sprintsinproject: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		return await dbRtns.findUniqueValues(db, sprintcollection, "num", {
-			projectname: args.projectname,
-		});
-	},
+  teambyprojectid: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findAll(db, teamcollection, {
+      projectid: new ObjectId(args.projectid),
+    });
+  },
 
-	tasksinsprintforproject: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let sprints = await dbRtns.findAll(db, sprintcollection, {
-			num: args.num,
-			projectname: args.projectname,
-		});
-		let tasks = [];
-		let resultsArray = await Promise.allSettled(
-			sprints.map(async (entry) => {
-				if (entry.taskid !== undefined) {
-					return await dbRtns.findAll(db, taskcollection, {
-						_id: new ObjectId(entry.taskid),
-					});
-				}
-			})
-		);
-		resultsArray.map((result) => {
-			result.value // resolve
-				? tasks.push(...result.value)
-				: null;
-		});
+  sprintsinproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    return await dbRtns.findUniqueValues(db, sprintcollection, "num", {
+      projectname: args.projectname,
+    });
+  },
 
-		return tasks;
-	},
+  tasksinsprintforproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let sprints = await dbRtns.findAll(db, sprintcollection, {
+      num: args.num,
+      projectname: args.projectname,
+    });
+    let tasks = [];
+    let resultsArray = await Promise.allSettled(
+      sprints.map(async (entry) => {
+        if (entry.taskid !== undefined) {
+          return await dbRtns.findAll(db, taskcollection, {
+            _id: new ObjectId(entry.taskid),
+          });
+        }
+      })
+    );
+    resultsArray.map((result) => {
+      result.value // resolve
+        ? tasks.push(...result.value)
+        : null;
+    });
 
-	addproject: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let project = {
-			name: args.name,
-			team: args.team,
-			startdate: args.startdate,
-			storypointconversion: args.storypointconversion,
-			totalstorypoints: args.totalstorypoints,
-			totalcost: args.totalcost,
-			hourlyrate: args.hourlyrate,
-		};
-		let results = await dbRtns.addOne(db, projectcollection, project);
-		return results.insertedCount === 1 ? project : null;
-	},
+    return tasks;
+  },
 
-	updateproject: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let id = args._id;
-		const project = {
-			name: args.name,
-			team: args.team,
-			startdate: args.startdate,
-			storypointconversion: args.storypointconversion,
-			totalstorypoints: args.totalstorypoints,
-			totalcost: args.totalcost,
-			hourlyrate: args.hourlyrate,
-		};
-		let results = await dbRtns.updateOne(
-			db,
-			projectcollection,
-			{ _id: ObjectId(id) },
-			project
-		);
-		return results.lastErrorObject.updatedExisting
-			? `user was updated`
-			: `user was not updated`;
-	},
+  addproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let project = {
+      name: args.name,
+      team: args.team,
+      startdate: args.startdate,
+      storypointconversion: args.storypointconversion,
+      totalstorypoints: args.totalstorypoints,
+      totalcost: args.totalcost,
+      hourlyrate: args.hourlyrate,
+    };
+    let results = await dbRtns.addOne(db, projectcollection, project);
+    return results.insertedCount === 1 ? project : null;
+  },
 
-	removeproject: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let id = args._id;
-		let results = await dbRtns.findOneAndDelete(db, projectcollection, {
-			_id: new ObjectId(id),
-		});
-		let tasks = await dbRtns.findAll(
-			db,
-			taskcollection,
-			{ projectname: results.value.name },
-			{}
-		);
-		await dbRtns.deleteMany(db, taskcollection, {
-			projectname: results.value.name,
-		});
-		tasks.forEach(async (element) => {
-			await dbRtns.deleteMany(db, subtaskcollection, {
-				taskid: element._id,
-			});
-		});
-		// delete sprints
-		await dbRtns.deleteMany(db, sprintcollection, {
-			projectname: results.value.name,
-		});
-		return results.ok == 1
-			? "project and all related tasks/subtasks were deleted"
-			: "project was not deleted";
-	},
+  updateproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    const project = {
+      name: args.name,
+      team: args.team,
+      startdate: args.startdate,
+      storypointconversion: args.storypointconversion,
+      totalstorypoints: args.totalstorypoints,
+      totalcost: args.totalcost,
+      hourlyrate: args.hourlyrate,
+    };
+    let results = await dbRtns.updateOne(
+      db,
+      projectcollection,
+      { _id: ObjectId(id) },
+      project
+    );
+    return results.lastErrorObject.updatedExisting
+      ? `user was updated`
+      : `user was not updated`;
+  },
 
-	addtask: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let task = {
-			name: args.name,
-			description: args.description,
-			costestimate: args.costestimate,
-			relativeestimate: args.relativeestimate,
-			projectname: args.projectname,
-		};
-		let results = await dbRtns.addOne(db, taskcollection, task);
-		return results.insertedCount === 1 ? task : null;
-	},
+  removeproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.findOneAndDelete(db, projectcollection, {
+      _id: new ObjectId(id),
+    });
+    let tasks = await dbRtns.findAll(
+      db,
+      taskcollection,
+      { projectname: results.value.name },
+      {}
+    );
+    await dbRtns.deleteMany(db, taskcollection, {
+      projectname: results.value.name,
+    });
+    tasks.forEach(async (element) => {
+      await dbRtns.deleteMany(db, subtaskcollection, {
+        taskid: element._id,
+      });
+    });
+    // delete sprints
+    await dbRtns.deleteMany(db, sprintcollection, {
+      projectname: results.value.name,
+    });
+    return results.ok == 1
+      ? "project and all related tasks/subtasks were deleted"
+      : "project was not deleted";
+  },
 
-	updatetask: async (args) => {
-		let db = await dbRtns.getDBInstance();
+  addtask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let task = {
+      name: args.name,
+      description: args.description,
+      costestimate: args.costestimate,
+      relativeestimate: args.relativeestimate,
+      projectname: args.projectname,
+    };
+    let results = await dbRtns.addOne(db, taskcollection, task);
+    return results.insertedCount === 1 ? task : null;
+  },
 
-		let task = {
-			name: args.name,
-			description: args.description,
-			costestimate: args.costestimate,
-			relativeestimate: args.relativeestimate,
-			projectname: args.projectname,
-		};
+  updatetask: async (args) => {
+    let db = await dbRtns.getDBInstance();
 
-		let results = await dbRtns.updateOne(
-			db,
-			taskcollection,
-			{ _id: new ObjectId(args._id) },
-			task
-		);
-		return results.lastErrorObject.updatedExisting
-			? `task was updated`
-			: `task was not updated`;
-	},
+    let task = {
+      name: args.name,
+      description: args.description,
+      costestimate: args.costestimate,
+      relativeestimate: args.relativeestimate,
+      projectname: args.projectname,
+    };
 
-	removetask: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let id = args._id;
-		let results = await dbRtns.deleteOne(db, taskcollection, {
-			_id: new ObjectId(id),
-		});
-		await dbRtns.deleteMany(db, subtaskcollection, {
-			taskid: id,
-		});
-		return results.deletedCount == 1
-			? "task and all related subtasks were deleted"
-			: "task was not deleted";
-	},
+    let results = await dbRtns.updateOne(
+      db,
+      taskcollection,
+      { _id: new ObjectId(args._id) },
+      task
+    );
+    return results.lastErrorObject.updatedExisting
+      ? `task was updated`
+      : `task was not updated`;
+  },
 
-	addsubtask: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let subtask = {
-			name: args.name,
-			description: args.description,
-			hoursworked: args.hoursworked,
-			relativeestimate: args.relativeestimate,
-			taskid: new ObjectId(args.taskid),
-		};
-		let results = await dbRtns.addOne(db, subtaskcollection, subtask);
-		return results.insertedCount === 1 ? subtask : null;
-	},
+  removetask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, taskcollection, {
+      _id: new ObjectId(id),
+    });
+    await dbRtns.deleteMany(db, subtaskcollection, {
+      taskid: id,
+    });
+    return results.deletedCount == 1
+      ? "task and all related subtasks were deleted"
+      : "task was not deleted";
+  },
 
-	updatesubtask: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		const subtask = {
-			name: args.name,
-			description: args.description,
-			hoursworked: args.hoursworked,
-			relativeestimate: args.relativeestimate,
-			taskid: ObjectId(args.taskid),
-		};
+  addsubtask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let subtask = {
+      name: args.name,
+      description: args.description,
+      hoursworked: args.hoursworked,
+      relativeestimate: args.relativeestimate,
+      taskid: new ObjectId(args.taskid),
+    };
+    let results = await dbRtns.addOne(db, subtaskcollection, subtask);
+    return results.insertedCount === 1 ? subtask : null;
+  },
 
-		let results = await dbRtns.updateOne(
-			db,
-			subtaskcollection,
-			{ _id: new ObjectId(args._id) },
-			subtask
-		);
-		return results.lastErrorObject.updatedExisting
-			? `subtask was updated`
-			: `subtask was not updated`;
-	},
+  updatesubtask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    const subtask = {
+      name: args.name,
+      description: args.description,
+      hoursworked: args.hoursworked,
+      relativeestimate: args.relativeestimate,
+      taskid: ObjectId(args.taskid),
+    };
 
-	removesubtask: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let id = args._id;
-		let results = await dbRtns.deleteOne(db, subtaskcollection, {
-			_id: new ObjectId(id),
-		});
-		return results.deletedCount == 1
-			? "subtask was deleted"
-			: "subtask was not deleted";
-	},
+    let results = await dbRtns.updateOne(
+      db,
+      subtaskcollection,
+      { _id: new ObjectId(args._id) },
+      subtask
+    );
+    return results.lastErrorObject.updatedExisting
+      ? `subtask was updated`
+      : `subtask was not updated`;
+  },
 
-	addteam: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		const member = {
-			name: args.name,
-			projectid: new ObjectId(args.projectid),
-		};
-		let results = await dbRtns.addOne(db, teamcollection, member);
-		return results.insertedCount === 1 ? member : null;
-	},
+  removesubtask: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, subtaskcollection, {
+      _id: new ObjectId(id),
+    });
+    return results.deletedCount == 1
+      ? "subtask was deleted"
+      : "subtask was not deleted";
+  },
 
-	updateteam: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		const member = {
-			name: args.name,
-			projectid: ObjectId(args.projectid),
-		};
+  addteam: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    const member = {
+      name: args.name,
+      projectid: new ObjectId(args.projectid),
+    };
+    let results = await dbRtns.addOne(db, teamcollection, member);
+    return results.insertedCount === 1 ? member : null;
+  },
 
-		let results = await dbRtns.updateOne(
-			db,
-			teamcollection,
-			{ _id: new ObjectId(args._id) },
-			member
-		);
-		return results.lastErrorObject.updatedExisting
-			? `team member was updated`
-			: `team member was not updated`;
-	},
+  updateteam: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    const member = {
+      name: args.name,
+      projectid: ObjectId(args.projectid),
+    };
 
-	removeteam: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let id = args._id;
-		let results = await dbRtns.deleteOne(db, teamcollection, {
-			_id: new ObjectId(id),
-		});
-		return results.deletedCount == 1
-			? "team member was deleted"
-			: "team member was not deleted";
-	},
+    let results = await dbRtns.updateOne(
+      db,
+      teamcollection,
+      { _id: new ObjectId(args._id) },
+      member
+    );
+    return results.lastErrorObject.updatedExisting
+      ? `team member was updated`
+      : `team member was not updated`;
+  },
 
-	addsprint: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		let sprint = { num: args.num, projectname: args.projectname };
-		let results = await dbRtns.addOne(db, sprintcollection, sprint);
-		return results.insertedCount === 1 ? sprint : null;
-	},
+  removeteam: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = args._id;
+    let results = await dbRtns.deleteOne(db, teamcollection, {
+      _id: new ObjectId(id),
+    });
+    return results.deletedCount == 1
+      ? "team member was deleted"
+      : "team member was not deleted";
+  },
 
-	copytasktosprint: async (args) => {
-		let db = await dbRtns.getDBInstance();
-		// add a new entry
-		let sprint = {
-			num: args.num,
-			taskid: ObjectId(args.taskid),
-			projectname: args.projectname,
-		};
-		let results = await dbRtns.addOne(db, sprintcollection, sprint);
-		return results.insertedCount === 1 ? sprint : null;
-	},
+  addsprint: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let sprint = { num: args.num, projectname: args.projectname };
+    let results = await dbRtns.addOne(db, sprintcollection, sprint);
+    return results.insertedCount === 1 ? sprint : null;
+  },
+
+  copytasktosprint: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    // add a new entry
+    let sprint = {
+      num: args.num,
+      taskid: ObjectId(args.taskid),
+      projectname: args.projectname,
+    };
+    let results = await dbRtns.addOne(db, sprintcollection, sprint);
+    return results.insertedCount === 1 ? sprint : null;
+  },
 };
 module.exports = { resolvers };
