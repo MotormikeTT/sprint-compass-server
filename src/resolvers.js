@@ -86,6 +86,21 @@ const resolvers = {
     return tasks;
   },
 
+  addproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let project = {
+      name: args.name,
+      team: args.team,
+      startdate: args.startdate,
+      storypointconversion: args.storypointconversion,
+      totalstorypoints: args.totalstorypoints,
+      totalcost: args.totalcost,
+      hourlyrate: args.hourlyrate,
+    };
+    let results = await dbRtns.addOne(db, projectcollection, project);
+    return results.insertedCount === 1 ? project : null;
+  },
+
   updateproject: async (args) => {
     let db = await dbRtns.getDBInstance();
     let id = args._id;
