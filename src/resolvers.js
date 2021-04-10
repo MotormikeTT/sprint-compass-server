@@ -86,21 +86,6 @@ const resolvers = {
     return tasks;
   },
 
-  addproject: async (args) => {
-    let db = await dbRtns.getDBInstance();
-    let project = {
-      name: args.name,
-      team: args.team,
-      startdate: args.startdate,
-      storypointconversion: args.storypointconversion,
-      totalstorypoints: args.totalstorypoints,
-      totalcost: args.totalcost,
-      hourlyrate: args.hourlyrate,
-    };
-    let results = await dbRtns.addOne(db, projectcollection, project);
-    return results.insertedCount === 1 ? project : null;
-  },
-
   updateproject: async (args) => {
     let db = await dbRtns.getDBInstance();
     let id = args._id;
@@ -120,8 +105,47 @@ const resolvers = {
       project
     );
     return results.lastErrorObject.updatedExisting
-      ? `user was updated`
-      : `user was not updated`;
+      ? `project was updated`
+      : `project was not updated`;
+  },
+
+  removeproject: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let id = new ObjectId(args._id);
+    let results = await dbRtns.findOneAndDelete(db, projectcollection, {
+      _id: id,
+    });
+
+    await dbRtns.deleteMany(db, taskcollection, {
+      projectname: results.value.name,
+    });
+
+    let tasks = await dbRtns.findAll(
+      db,
+      taskcollection,
+      { projectname: results.value.name },
+      {}
+    );
+
+    tasks.map(async (element) => {
+      await dbRtns.deleteMany(db, subtaskcollection, {
+        taskid: element._id,
+      });
+    });
+
+    // delete members
+    await dbRtns.deleteMany(db, teamcollection, {
+      projectid: id,
+    });
+
+    // delete sprints
+    await dbRtns.deleteMany(db, sprintcollection, {
+      projectname: results.value.name,
+    });
+
+    return results.ok == 1
+      ? "project and all related tasks/subtasks were deleted"
+      : "project was not deleted";
   },
 
   removeproject: async (args) => {
@@ -190,13 +214,21 @@ const resolvers = {
 
   removetask: async (args) => {
     let db = await dbRtns.getDBInstance();
-    let id = args._id;
+    let id = new ObjectId(args._id);
     let results = await dbRtns.deleteOne(db, taskcollection, {
-      _id: new ObjectId(id),
+      _id: id,
     });
+
+    // delete the task's subtasks
     await dbRtns.deleteMany(db, subtaskcollection, {
       taskid: id,
     });
+
+    // delete it's sprints as well
+    await dbRtns.deleteMany(db, sprintcollection, {
+      taskid: id,
+    });
+
     return results.deletedCount == 1
       ? "task and all related subtasks were deleted"
       : "task was not deleted";
@@ -303,6 +335,20 @@ const resolvers = {
     };
     let results = await dbRtns.addOne(db, sprintcollection, sprint);
     return results.insertedCount === 1 ? sprint : null;
+  },
+
+  removetaskfromsprint: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    // add a new entry
+    let sprint = {
+      num: args.num,
+      taskid: ObjectId(args.taskid),
+      projectname: args.projectname,
+    };
+    let results = await dbRtns.deleteOne(db, sprintcollection, sprint);
+    return results.deletedCount == 1
+      ? "sprint item was deleted"
+      : "sprint item was not deleted";
   },
 };
 module.exports = { resolvers };
