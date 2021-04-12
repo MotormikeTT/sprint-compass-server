@@ -47,10 +47,10 @@ const resolvers = {
     });
   },
 
-  teambyprojectid: async (args) => {
+  teambyproject: async (args) => {
     let db = await dbRtns.getDBInstance();
     return await dbRtns.findAll(db, teamcollection, {
-      projectid: new ObjectId(args.projectid),
+      projectname: args.projectname,
     });
   },
 
@@ -150,7 +150,7 @@ const resolvers = {
 
     // delete members
     await dbRtns.deleteMany(db, teamcollection, {
-      projectid: id,
+      projectname: results.value.name,
     });
 
     // delete sprints
@@ -158,35 +158,6 @@ const resolvers = {
       projectname: results.value.name,
     });
 
-    return results.ok == 1
-      ? "project and all related tasks/subtasks were deleted"
-      : "project was not deleted";
-  },
-
-  removeproject: async (args) => {
-    let db = await dbRtns.getDBInstance();
-    let id = args._id;
-    let results = await dbRtns.findOneAndDelete(db, projectcollection, {
-      _id: new ObjectId(id),
-    });
-    let tasks = await dbRtns.findAll(
-      db,
-      taskcollection,
-      { projectname: results.value.name },
-      {}
-    );
-    await dbRtns.deleteMany(db, taskcollection, {
-      projectname: results.value.name,
-    });
-    tasks.forEach(async (element) => {
-      await dbRtns.deleteMany(db, subtaskcollection, {
-        taskid: element._id,
-      });
-    });
-    // delete sprints
-    await dbRtns.deleteMany(db, sprintcollection, {
-      projectname: results.value.name,
-    });
     return results.ok == 1
       ? "project and all related tasks/subtasks were deleted"
       : "project was not deleted";
@@ -256,6 +227,7 @@ const resolvers = {
       description: args.description,
       hoursworked: args.hoursworked,
       relativeestimate: args.relativeestimate,
+      assignedname: args.assignedname,
       taskid: new ObjectId(args.taskid),
     };
     let results = await dbRtns.addOne(db, subtaskcollection, subtask);
@@ -269,6 +241,7 @@ const resolvers = {
       description: args.description,
       hoursworked: args.hoursworked,
       relativeestimate: args.relativeestimate,
+      assignedname: args.assignedname,
       taskid: ObjectId(args.taskid),
     };
 
@@ -298,7 +271,7 @@ const resolvers = {
     let db = await dbRtns.getDBInstance();
     const member = {
       name: args.name,
-      projectid: new ObjectId(args.projectid),
+      projectname: args.projectname,
     };
     let results = await dbRtns.addOne(db, teamcollection, member);
     return results.insertedCount === 1 ? member : null;
@@ -308,7 +281,7 @@ const resolvers = {
     let db = await dbRtns.getDBInstance();
     const member = {
       name: args.name,
-      projectid: ObjectId(args.projectid),
+      projectname: args.projectname,
     };
 
     let results = await dbRtns.updateOne(

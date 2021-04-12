@@ -6,7 +6,7 @@ type Query {
     projectbydata(name: String, team: String, startdate: String) : Project,
     tasksforproject(projectname: String): [Task],
     subtasksbytaskid(taskid: ID): [Subtask],
-    teambyprojectid(projectid: ID): [Team],
+    teambyproject(projectname: String): [Team],
     sprintsinproject(projectname: String): [String],
     tasksinsprintforproject(num: Int, projectname: String) : [Task]
 }
@@ -50,6 +50,7 @@ type Mutation {
         description: String,
         hoursworked: Float,
         relativeestimate: Float,
+        assignedname: String,
         taskid: ID) : Subtask,
 
     updatesubtask(_id: ID
@@ -57,16 +58,17 @@ type Mutation {
         description: String,
         hoursworked: Float,
         relativeestimate: Float,
+        assignedname: String,
         taskid: ID) : String,
 
     removesubtask(_id: ID) : String,
 
     addteam(name: String,
-        projectid: ID) : Team,
+        projectname: String) : Team,
 
     updateteam(_id: ID
         name: String,
-        projectid: ID) : Team,
+        projectname: String) : Team,
 
     removeteam(_id: ID) : String,
 
@@ -103,13 +105,14 @@ type Subtask {
     description: String
     hoursworked: Float
     relativeestimate: Float
+    assignedname: String
     taskid: ID
 }
 
 type Team {
     _id: ID
     name: String
-    projectid: ID
+    projectname: String
 }
 
 type Sprint {
