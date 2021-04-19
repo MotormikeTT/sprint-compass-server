@@ -9,6 +9,7 @@ type Query {
     teambyproject(projectname: String): [Team],
     sprintsinproject(projectname: String): [String],
     tasksinsprintforproject(num: Int, projectname: String) : [Task]
+    taskreport(num: Int, projectname: String) : [TaskReport]
 }
 
 type Mutation {
@@ -97,6 +98,16 @@ type Task {
     costestimate: Float
     relativeestimate: Float
     projectname: String
+}
+
+type TaskReport {
+    _id: ID
+    name: String
+    description: String
+    costestimate: Float
+    relativeestimate: Float
+    projectname: String
+    subtasks: [Subtask]
 }
 
 type Subtask {

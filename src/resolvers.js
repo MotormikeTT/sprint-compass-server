@@ -86,6 +86,47 @@ const resolvers = {
     return tasks;
   },
 
+  taskreport: async (args) => {
+    let db = await dbRtns.getDBInstance();
+    let sprints = await dbRtns.findAll(db, sprintcollection, {
+      num: args.num,
+      projectname: args.projectname,
+    });
+    let tasks = [];
+    let resultsTasks = await Promise.allSettled(
+      sprints.map(async (entry) => {
+        if (entry.taskid !== undefined) {
+          return await dbRtns.findAll(db, taskcollection, {
+            _id: new ObjectId(entry.taskid),
+          });
+        }
+      })
+    );
+    let resultsSubtasks = await Promise.allSettled(
+      resultsTasks.map(async (entry) => {
+        if (entry.value !== undefined) {
+          return await dbRtns.findAll(db, subtaskcollection, {
+            taskid: new ObjectId(entry.value[0]._id),
+          });
+        }
+      })
+    );
+    //console.log(resultsSubtasks);
+    let index = 1;
+    resultsTasks.map((result) => {
+      if (result.value !== undefined) {
+        // resolve
+        result.value.map((entry) => {
+          var task = entry;
+          task.subtasks = resultsSubtasks[index++].value;
+          tasks.push(task);
+        });
+      }
+    });
+
+    return tasks;
+  },
+
   addproject: async (args) => {
     let db = await dbRtns.getDBInstance();
     let project = {
