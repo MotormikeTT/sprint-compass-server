@@ -51,6 +51,7 @@ type Mutation {
         description: String,
         hoursworked: Float,
         relativeestimate: Float,
+        reestimate: Float,
         assignedname: String,
         taskid: ID) : Subtask,
 
@@ -59,6 +60,7 @@ type Mutation {
         description: String,
         hoursworked: Float,
         relativeestimate: Float,
+        reestimate: Float,
         assignedname: String,
         taskid: ID) : String,
 
@@ -116,6 +118,7 @@ type Subtask {
     description: String
     hoursworked: Float
     relativeestimate: Float
+    reestimate: Float
     assignedname: String
     taskid: ID
 }

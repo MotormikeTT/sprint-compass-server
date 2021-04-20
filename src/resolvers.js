@@ -268,6 +268,7 @@ const resolvers = {
       description: args.description,
       hoursworked: args.hoursworked,
       relativeestimate: args.relativeestimate,
+      reestimate: args.reestimate,
       assignedname: args.assignedname,
       taskid: new ObjectId(args.taskid),
     };
@@ -282,6 +283,7 @@ const resolvers = {
       description: args.description,
       hoursworked: args.hoursworked,
       relativeestimate: args.relativeestimate,
+      reestimate: args.reestimate,
       assignedname: args.assignedname,
       taskid: ObjectId(args.taskid),
     };
